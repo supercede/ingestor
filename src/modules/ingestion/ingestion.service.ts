@@ -38,16 +38,16 @@ export class IngestionService implements OnModuleInit {
       }
     });
 
-    // Process all ingestion sources at startup
-    // this.logger.log('Processing all ingestion sources at startup');
-    // try {
-    //   await this.triggerAllIngestions();
-    //   this.logger.log('Successfully triggered all ingestions at startup');
-    // } catch (error) {
-    //   this.logger.error(
-    //     `Failed to trigger ingestions at startup: ${error.message}`,
-    //   );
-    // }
+    // Process ingestion sources at startup
+    this.logger.log('Processing all ingestion sources at startup');
+    try {
+      await this.triggerAllIngestions();
+      this.logger.log('Successfully triggered all ingestions at startup');
+    } catch (error) {
+      this.logger.error(
+        `Failed to trigger ingestions at startup: ${error.message}`,
+      );
+    }
   }
 
   getDataSources(): DataSourceConfig[] {

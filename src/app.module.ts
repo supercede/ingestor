@@ -43,7 +43,6 @@ import { APP_GUARD } from '@nestjs/core';
           connectTimeout: 10000,
           maxRetriesPerRequest: 10,
           enableReadyCheck: false,
-          // Add retry strategy to handle connection failures gracefully
           retryStrategy: (times) => {
             return Math.min(times * 50, 2000);
           },

@@ -22,12 +22,6 @@ import { PropertySchema } from '../properties/schemas/property.schema';
         },
         removeOnComplete: true,
       },
-      redis: {
-        host: 'localhost',
-        port: 6379,
-        connectTimeout: 10000,
-        maxRetriesPerRequest: 10,
-      },
     }),
     MongooseModule.forFeature([{ name: 'Property', schema: PropertySchema }]),
     ScheduleModule.forRoot(),

@@ -23,7 +23,7 @@ export class IngestionProcessor {
     this.s3Client = new S3();
   }
 
-  @Process({ name: 'process-file', concurrency: 2 })
+  @Process({ name: 'process-file', concurrency: 4 })
   async processFile(
     job: Job<{ sourceType: string; key: string; bucket: string }>,
   ) {
