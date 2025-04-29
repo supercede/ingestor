@@ -4,8 +4,7 @@ import appConfig from './config/app.config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { BullModule } from '@nestjs/bull';
 import { ScheduleModule } from '@nestjs/schedule';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import redisConfig from './config/redis.config';
 import databaseConfig from './config/database.config';
 import serverConfig from './config/server.config';
@@ -13,6 +12,7 @@ import { validationSchema } from './config/config.schema';
 import { PropertiesModule } from './modules/properties/properties.module';
 import sourcesConfig from './config/sources.config';
 import { IngestionModule } from './modules/ingestion/ingestion.module';
+import { APP_GUARD } from '@nestjs/core';
 
 @Module({
   imports: [
@@ -51,10 +51,23 @@ import { IngestionModule } from './modules/ingestion/ingestion.module';
       }),
     }),
     ScheduleModule.forRoot(),
+    ThrottlerModule.forRoot({
+      throttlers: [
+        {
+          ttl: 0,
+          limit: 0,
+        },
+      ],
+    }),
     IngestionModule,
     PropertiesModule,
   ],
-  controllers: [AppController],
-  providers: [AppService],
+  controllers: [],
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
+  ],
 })
 export class AppModule {}

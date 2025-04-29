@@ -1,11 +1,19 @@
 import { Controller, Post, Body, Get, Param } from '@nestjs/common';
+import { SkipThrottle, Throttle } from '@nestjs/throttler';
 import { IngestionService } from './ingestion.service';
 import { DataSourceConfig } from '../../config/sources.config';
 
+@Throttle({
+  default: {
+    limit: 1,
+    ttl: 60 * 1000,
+  },
+})
 @Controller('ingestion')
 export class IngestionController {
   constructor(private readonly ingestionService: IngestionService) {}
 
+  @SkipThrottle()
   @Get('sources')
   getSources(): DataSourceConfig[] {
     return this.ingestionService.getDataSources();
