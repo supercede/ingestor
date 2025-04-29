@@ -3,6 +3,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { PropertySchema } from './schemas/property.schema';
 import { PropertiesController } from './properties.controller';
 import { PropertiesService } from './properties.service';
+import { CacheModule } from '../cache/cache.module';
 
 @Module({
   imports: [
@@ -12,6 +13,7 @@ import { PropertiesService } from './properties.service';
         schema: PropertySchema,
       },
     ]),
+    CacheModule,
   ],
   controllers: [PropertiesController],
   providers: [PropertiesService],

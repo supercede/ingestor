@@ -1,15 +1,24 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
+import { CacheService } from '../cache/cache.service';
 import { FilterPropertiesDto } from './dto/filterProperties.dto';
 
 @Injectable()
 export class PropertiesService {
   constructor(
     @InjectModel('Property') private readonly propertyModel: Model<any>,
+    private readonly cacheService: CacheService,
   ) {}
 
   async findAll(filterDto: FilterPropertiesDto): Promise<any[]> {
+    const cacheKey = `properties:${JSON.stringify(filterDto)}`;
+    const cachedData = await this.cacheService.get(cacheKey);
+
+    if (cachedData) {
+      return JSON.parse(cachedData);
+    }
+
     const filters = this.buildFilters(filterDto);
     const listings = await this.propertyModel
       .find(filters)
@@ -17,6 +26,8 @@ export class PropertiesService {
       .skip(filterDto.skip || 0)
       .sort(filterDto.sort || { updatedAt: -1 })
       .exec();
+
+    await this.cacheService.set(cacheKey, JSON.stringify(listings), 600);
 
     return listings;
   }
@@ -55,8 +66,6 @@ export class PropertiesService {
       filters.$or = [
         { 'attributes.name': searchRegex },
         { 'attributes.description': searchRegex },
-        { 'location.city': searchRegex },
-        { 'location.country': searchRegex },
       ];
     }
 
@@ -113,5 +122,9 @@ export class PropertiesService {
       .skip(options.skip || 0)
       .sort(options.sort || { updatedAt: -1 })
       .exec();
+  }
+
+  async invalidateCache(): Promise<void> {
+    await this.cacheService.invalidateByPattern('properties:*');
   }
 }

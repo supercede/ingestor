@@ -1,0 +1,46 @@
+services:
+  cache:
+    image: redis:6.2-alpine
+    container_name: cache
+    restart: always
+    ports:
+      - '6379:6379'
+    command: redis-server --save 20 1 --loglevel warning
+    volumes:
+      - cache:/data
+
+  mongodb:
+    image: mongo:6-jammy
+    container_name: mongo
+    restart: always
+    ports:
+      - '27017:27017'
+    volumes:
+      - dbdata:/data/db
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: api
+    restart: always
+    ports:
+      - '5002:5002'
+    environment:
+      - DB_URL=mongodb://mongo:27017/mydatabase
+      - REDIS_URL=redis://cache:6379/0
+      - SERVER_PORT=5002
+      - NODE_ENV=development
+      - REDIS_HOST=cache
+      - REDIS_PORT=6379
+      - APP_NAME=ingestion-service
+    depends_on:
+      - cache
+      - mongodb
+    volumes:
+      - dist:/app
+
+volumes:
+  dbdata:
+  cache:
+  dist:

@@ -1,98 +1,153 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Property Data Ingestor
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+A NestJS application that ingests property data from multiple sources and provides a unified API to query the data.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## Modules
 
-## Description
+### Properties Module
+- Handles property data querying and filtering
+- Provides REST API endpoints for property data
+- Implements MongoDB-based filtering with caching
+- Supports flexible search criteria:
+  - Location-based (city, country)
+  - Price range filters
+  - Availability status
+  - Source type filtering
+  - Price segment categorization
+  - Full-text search across properties
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+### Ingestion Module
+- Handles data ingestion from multiple sources
+- Features:
+  - Scheduled ingestion using cron expressions
+  - Manual trigger endpoints (rate-limited)
+  - Source-specific data transformers
 
-## Project setup
+### Cache Module
+- Redis-based caching implementation
+- Features:
+  - Pattern-based invalidation
+  - Configurable TTL per cache entry
 
-```bash
-$ npm install
+## API Endpoints
+
+### Properties
+```
+GET /properties
+    Query Parameters:
+    - city: string
+    - country: string
+    - minPrice: number
+    - maxPrice: number
+    - price: number
+    - isAvailable: boolean
+    - sourceType: string
+    - priceSegment: string
+    - name: string
+    - limit: number
+    - skip: number
+    - sort: object
+    - attributeSearch: string
 ```
 
-## Compile and run the project
+### Ingestion
+```
+GET /ingestion/sources
+    Returns list of configured data sources
 
-```bash
-# development
-$ npm run start
+POST /ingestion/trigger/:sourceId
+    Triggers ingestion for specific source
+    Rate limited: 1 request per minute
 
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+POST /ingestion/trigger-all
+    Triggers ingestion for all sources
+    Rate limited: 1 request per minute
 ```
 
-## Run tests
+
+## Development
 
 ```bash
-# unit tests
-$ npm run test
+# Install dependencies
+npm install
 
-# e2e tests
-$ npm run test:e2e
+# Run in development mode
+npm run start:dev
 
-# test coverage
-$ npm run test:cov
+# Run tests
+npm run test
+
+# Build for production
+npm run build
 ```
 
-## Deployment
+### Docker
+To make use of just the infrastructure (MongoDB database, redis), you can run:
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+```
+docker compose -f docker-compose.infra.yml up -d
+```
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+This will start the MongoDB and Redis containers. You can then run the application locally or using the Dockerfile provided in the project.
+
+The docker-compose.dev.yml file is used to run the application in a containerized environment. It includes the application service as well as the MongoDB and Redis services. To run the application using this file, you can use the following command:
 
 ```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+docker compose -f docker-compose.dev.yml up -d
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+To stop the services, you can use:
 
-## Resources
+```bash
+docker compose -f docker-compose.dev.yml down
+```
 
-Check out a few resources that may come in handy when working with NestJS:
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+## Environment Variables
 
-## Support
+Create/configure .env file with your credentials. A sample .env.example file has been provided. Make a duplicate of .env.example and rename to .env, then configure your credentials (ensure to provide the correct details)
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
 
-## Stay in touch
+## Adding a New Data Source
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+1. Create source configuration in `src/config/sources.config.ts`:
+```typescript
+{
+  id: 'new-source',
+  url: 's3://your-bucket/data.json',
+  description: 'New data source description',
+  schedule: '0 */4 * * *'  // Optional: Run every 4 hours
+}
+```
 
-## License
+2. Create transformer in `src/modules/ingestion/transformers/new-source.transformer.ts`:
+```typescript
+import { PropertyTransformer } from '../interfaces/property.transformer';
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+export class NewSourceTransformer implements PropertyTransformer {
+  transform(data: any) {
+    return {
+      sourceType: 'new-source',
+      attributes: {
+        name: data.propertyName,
+        description: data.propertyDescription,
+        // ... map source-specific fields
+      },
+      location: {
+        city: data.city,
+        country: data.country,
+      },
+      price: Number(data.price),
+      isAvailable: data.status === 'active'
+    };
+  }
+}
+```
+
+3. Register transformer in `src/modules/ingestion/ingestion.service.ts`:
+```typescript
+private readonly transformers = {
+  'new-source': new NewSourceTransformer(),
+  // ... existing transformers
+};
+```
