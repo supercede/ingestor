@@ -1,11 +1,15 @@
 export const extractS3BucketAndKeyFromUrl = (
-  s3Path: string,
-): { bucket: string; key: string } => {
-  const urlObj = new URL(s3Path);
+  path: string,
+): { bucket?: string; key?: string; url?: string } => {
+  const urlObj = new URL(path);
   const hostname = urlObj.hostname;
 
   const bucket = hostname.split('.s3.')[0];
   const key = urlObj.pathname.substring(1);
+
+  if (!bucket && !key) {
+    return { url: path };
+  }
 
   return {
     bucket,

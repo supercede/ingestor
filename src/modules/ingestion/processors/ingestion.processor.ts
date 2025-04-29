@@ -4,10 +4,12 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Job } from 'bull';
 import { S3 } from 'aws-sdk';
+import * as request from 'request';
 import * as JSONStream from 'jsonstream';
 import { TransformerFactory } from '../transformers/transformer.factory';
 import { OperationTimer } from 'src/common/utils/timer.utils';
 import { PropertyDto } from 'src/modules/properties/dto/property.dto';
+import { Readable } from 'stream';
 
 @Processor('ingestion-queue')
 export class IngestionProcessor {
@@ -25,13 +27,13 @@ export class IngestionProcessor {
 
   @Process({ name: 'process-file', concurrency: 4 })
   async processFile(
-    job: Job<{ sourceType: string; key: string; bucket: string }>,
+    job: Job<{ sourceType: string; key: string; bucket: string; url: string }>,
   ) {
     this.logger.log(
       `Processing job: ${job.id}, attempt ${job.attemptsMade + 1}`,
     );
 
-    const { sourceType, key, bucket } = job.data;
+    const { sourceType, key, bucket, url } = job.data;
     this.logger.log(`Processing file ${key} from ${bucket} as ${sourceType}`);
 
     const timer = new OperationTimer(
@@ -41,9 +43,17 @@ export class IngestionProcessor {
 
     try {
       const transformer = this.transformerFactory.getTransformer(sourceType);
-      const s3Stream = this.s3Client
-        .makeUnauthenticatedRequest('getObject', { Bucket: bucket, Key: key })
-        .createReadStream();
+      let dataStream: Readable | request.Request;
+
+      if (bucket && key) {
+        dataStream = this.s3Client
+          .makeUnauthenticatedRequest('getObject', { Bucket: bucket, Key: key })
+          .createReadStream();
+      } else {
+        dataStream = request({
+          url,
+        });
+      }
 
       const jsonStream = JSONStream.parse('*');
 
@@ -89,7 +99,7 @@ export class IngestionProcessor {
           }
         };
 
-        s3Stream
+        dataStream
           .pipe(jsonStream)
           .on('data', (data) => {
             handleData(data).catch((error) => {

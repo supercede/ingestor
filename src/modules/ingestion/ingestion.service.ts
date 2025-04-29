@@ -61,14 +61,15 @@ export class IngestionService implements OnModuleInit {
       throw new Error(`Source not found: ${id}`);
     }
 
-    const { bucket, key } = extractS3BucketAndKeyFromUrl(source.url);
+    const data = extractS3BucketAndKeyFromUrl(source.url);
 
-    this.logger.log(`Triggering ingestion for ${id} from ${key}`);
+    this.logger.log(
+      `Triggering ingestion for ${id} from ${data.key || data.url}`,
+    );
 
     await this.ingestionQueue.add('process-file', {
       sourceType: source.id,
-      key,
-      bucket,
+      ...data,
     });
   }
 
