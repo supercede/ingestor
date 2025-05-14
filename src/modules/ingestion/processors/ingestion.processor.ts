@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-call */
 import { Process, Processor } from '@nestjs/bull';
 import { Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
@@ -107,7 +108,7 @@ export class IngestionProcessor {
               jsonStream.destroy(error);
             });
           })
-          .on('error', (error) => {
+          .on('error', (error: Error) => {
             this.logger.error(`Error processing file: ${error.message}`);
             timer.stop();
             reject(error);
@@ -137,7 +138,9 @@ export class IngestionProcessor {
               resolve(true);
             } catch (error) {
               this.logger.error(`Error finalizing job: ${error.message}`);
-              reject(error);
+              reject(
+                error instanceof Error ? error : new Error('Unknown error'),
+              );
             }
           });
       });

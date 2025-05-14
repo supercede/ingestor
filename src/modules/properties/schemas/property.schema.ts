@@ -15,9 +15,10 @@ export const PropertySchema = new mongoose.Schema({
 });
 
 PropertySchema.methods.toJSON = function () {
-  const obj = this.toObject();
+  const doc = this as mongoose.Document;
+  const obj = doc.toObject();
   delete obj.__v;
-  return obj;
+  return obj as Record<string, unknown>;
 };
 
 // PropertySchema.index({ sourceType: 1, 'location.city': 1 });

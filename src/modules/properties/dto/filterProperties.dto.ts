@@ -34,7 +34,7 @@ export class FilterPropertiesDto {
 
   @IsOptional()
   @IsString()
-  @Transform(({ value }) => value?.toLowerCase())
+  @Transform(({ value }: { value: string | undefined }) => value?.toLowerCase())
   price?: string;
 
   @IsOptional()
